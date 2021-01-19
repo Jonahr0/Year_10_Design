@@ -1,0 +1,238 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="Artistsearch.css"/>
+    <script>
+    const AMOUNT_TO_PRINT = 5;
+    var accessToken = '';  
+
+    window.onload = function() {
+      const promise = setAccessToken()
+      promise.then(showSearchBar)
+    }
+
+    function showSearchBar(){
+      const searchHolder = document.getElementById('search-bar-holder')
+      searchHolder.style.display = 'block'
+    }
+
+     async function submit(){
+      const artist = await getArtistMatch()
+      const artistId = artist.id
+      const artistName = artist.name
+      const topTracks = await getTopTracks(artistId)
+      setArtistNameTitle(artistName)
+      clearExistingSearchResults()
+      populateSearchResults(topTracks)
+      makeSearchResultsVisible()
+    }
+
+    async function getArtistMatch(){
+      const artistName = getArtistNameFromSearchBar()
+      const artistMatches = await getArtistMatches(artistName)
+      return getFirstArtistMatch(artistMatches)
+    }
+
+    function clearExistingSearchResults(){
+    const e = document.getElementById('top-tracks-list')
+          e.innerHTML = ""
+    }
+
+    function setArtistNameTitle(name){
+      document.getElementById('artist-name-title').innerHTML = name
+    }
+
+    function makeSearchResultsVisible(){
+      document.getElementById('top-tracks-holder').style.display = 'block'
+    }
+
+
+    function getArtistNameFromSearchBar(){
+      return document.getElementById('artist-name').value
+    }
+
+    function getFirstArtistMatch(matches){
+      const allItems = matches.artists.items
+      if(Array.isArray(allItems) == false)
+        throw new Error('Expected spotify matches to be an array. But it was not.')
+      if(allItems.length < 1)
+        throw new Error('No mataches for that artist name.')
+      else
+        return allItems[0]
+     }
+
+
+    async function searchSpotify(artistId){
+        console.log('Top tracks for ' + firstMatch.name)
+        printTopTracks(firstMatch.id)
+    }
+
+    function populateSearchResults(tracks){
+      for(let i = 0; i < AMOUNT_TO_PRINT; i++){
+        addToResultList(tracks[i].name)
+      }
+    }
+
+    function addToResultList(trackName){
+      const trackList = getHTMLTrackList()
+      const listElement = document.createElement('li')
+      listElement.className = 'search-result'
+      listElement.innerHTML = trackName
+      trackList.appendChild(listElement)
+    }
+
+
+    function getHTMLTrackList(){
+      return document.getElementById('top-tracks-list')
+    }
+    
+      async function setAccessToken(){
+        try {
+          const authOptions = getAuthOptions()
+          var url = "https://accounts.spotify.com/api/token";
+          const response = await fetch(url, authOptions)
+          const data = await response.json()
+          accessToken = data.access_token
+        } catch(err) {
+          alert(err.message)
+        }
+      }
+
+
+      function getAuthOptions(){
+        const clientID = "0b01d06425e3451a9a071b4e9f4d34ec";  
+        const secretID = "b393df15f8c949018b2530f3e5ea791a";  
+        const authID = btoa(clientID+":"+secretID); 
+        options =           
+        {
+            body: "grant_type=client_credentials",
+            headers: {Authorization: "Basic "+ authID, "Content-Type": "application/x-www-form-urlencoded"},
+            method: "POST"
+        }
+        return options
+      }
+
+    async function getTopTracks(artistId) {
+      try {
+        const url = `https://api.spotify.com/v1/artists/${artistId}/top-tracks?country=ES`
+        const options = getHTTPOptions()
+        const response = await fetch(url, options)
+        const obj = await response.json()
+        return obj.tracks
+      } catch(err){
+        alert(err.message)
+      }
+    }
+
+    async function getArtistMatches(artistName) {
+      try {
+        const url = `https://api.spotify.com/v1/search?q=artist%3A${artistName}&type=artist`
+        const options = getHTTPOptions()
+        const response = await fetch(url, options)
+        return await response.json()
+      } catch(err){
+        alert(err.message)
+      }
+    }
+
+    function getHTTPOptions(){
+      return {headers:{"Authorization":"Bearer " + accessToken}}
+    }
+
+</script>
+</head>
+
+
+ <body>
+    
+    <div id="left-column" class="column"></div>
+    <div id="center-column" class="column"></div>
+    <div id="right-column" class = "column"></div>
+     
+     
+     
+    </body>
+    
+
+<div class="header">
+  <img src="KanyeWest.jpg" alt="Artist image" style="width:100%;"/>
+  <div class="text-block">
+    <p> Artist Search</p>
+  </div>
+</div>
+
+<div class="sidenav">
+  <a href="Artistsearch.html">Home</a>
+  <a href="About.html">About</a>
+
+
+
+</div>
+
+
+<div class="main">
+
+
+    <div class="center-content">
+
+    <div class="info-box">
+        <div class="info-box-title"> Suggested artist</div>
+      
+        <ol>
+  <li>The Beatles</li>
+  <li>The Rolling Stones</li>
+  <li>Elton John</li>
+  <li>Mariah Carey</li>
+  <li>Madonna</li>
+    <li>Barbara Streisand</li>
+    <li>Michael Jackson</li>
+    <li>Taylor Swift</li>
+    <li>Stevie Wonder</li>
+    <li>Chicago</li>
+    <li>Whitney Houston</li>
+    <li>Paul Mccartney</li>
+    <li>Elvis Presley</li>
+    <li>Janet Jackson</li>
+    <li>Rod Stewart</li>
+            
+</ol>  
+
+        
+        </div>
+        
+        </div>
+    
+
+
+    <div class="right-content">
+
+    
+ <div id='search-bar-holder' style='display:none;'>
+  Artist name:   <input type="text" name="Aname" id="artist-name"><br/>
+  <br>
+  <input id='submit-button' type="button" value="Submit" onClick="submit()">
+</div>
+
+<div id='top-tracks-holder' style='display:none;'>
+  <div style='text-align:center;'>
+    Top Tracks for <span id='artist-name-title'></span>
+  </div>
+  <ul id='top-tracks-list'>
+  </ul>
+  <div id='error-message' style='display:none;'>
+    </div>
+    </div>
+    </div>
+
+
+
+
+
+
+
+</body>
+
+
+
+
+</html>
